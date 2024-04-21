@@ -5,16 +5,24 @@ interface CompletionResponse {
   stop: boolean;
 }
 
+interface ResponseProps {
+  text: string;
+}
+
+const Response: React.FC<ResponseProps> = ({ text }) => {
+  return <p>{text}</p>;
+};
+
 function App() {
   const [prompt, setPrompt] = useState('');
-  const [response, setResponse] = useState('');
+  const [responseText, setResponseText] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setResponse('');
+    setResponseText('');
 
     try {
-      const res = await fetch('http://localhost:8080/completion', {
+      const response = await fetch('http://localhost:8080/completion', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -26,11 +34,11 @@ function App() {
         }),
       });
 
-      if (!res.body) {
+      if (!response.body) {
         throw new Error('Failed to get response body');
       }
 
-      const reader = res.body.getReader();
+      const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
 
       const processStream = async () => {
@@ -44,7 +52,7 @@ function App() {
           const match = line.match(/data: (.+)/);
           if (match) {
             const data: CompletionResponse = JSON.parse(match[1]);
-            setResponse((prevResponse) => prevResponse + data.content);
+            setResponseText((prevText) => prevText + data.content);
             if (data.stop) return;
           }
         }
@@ -71,7 +79,7 @@ function App() {
       </form>
       <div>
         <h2>Response:</h2>
-        <p>{response}</p>
+        <Response text={responseText} />
       </div>
     </div>
   );
