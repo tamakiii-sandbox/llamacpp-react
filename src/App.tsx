@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import axios from 'axios';
+
+interface CompletionResponse {
+  content: string;
+}
 
 function App() {
   const [prompt, setPrompt] = useState('');
   const [response, setResponse] = useState('');
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:8080/completion', {
+      const res = await axios.post<CompletionResponse>('http://localhost:8080/completion', {
         prompt,
         n_predict: 128,
       });
