@@ -1,0 +1,11 @@
+{
+  "name": "llamacpp-react",
+  "version": "1.0.0",
+  "description": "```sh make setup make install make -f execute.mk server curl --request POST --url http://localhost:8080/completion --header \"Content-Type: application/json\" --data '{\"prompt\": \"Building a website can be done in 10 simple steps:\",\"n_predict\": 128}' curl --request POST --url http://localhost:8080/completion --header \"Content-Type: application/json\" --data '{\"prompt\": \"Building a website can be done in 10 simple steps:\",\"n_predict\": 128, \"stream\":true}' ````",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
