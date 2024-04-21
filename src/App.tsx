@@ -1,8 +1,8 @@
 import React, { useState, FormEvent } from 'react';
-import axios from 'axios';
 
 interface CompletionResponse {
   content: string;
+  stop: boolean;
 }
 
 function App() {
@@ -11,12 +11,44 @@ function App() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setResponse('');
+
     try {
-      const res = await axios.post<CompletionResponse>('http://localhost:8080/completion', {
-        prompt,
-        n_predict: 128,
+      const res = await fetch('http://localhost:8080/completion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          n_predict: 128,
+          stream: true,
+        }),
       });
-      setResponse(res.data.content);
+
+      const reader = res.body?.getReader();
+      if (!reader) {
+        throw new Error('Failed to get response reader');
+      }
+
+      const decoder = new TextDecoder('utf-8');
+
+      let done = false;
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          const line = decoder.decode(value);
+          const match = line.match(/data: (.+)/);
+          if (match) {
+            const data: CompletionResponse = JSON.parse(match[1]);
+            setResponse((prevResponse) => prevResponse + data.content);
+            if (data.stop) {
+              break;
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Error:', error);
     }
