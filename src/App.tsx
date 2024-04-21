@@ -26,29 +26,33 @@ function App() {
         }),
       });
 
-      const reader = res.body?.getReader();
-      if (!reader) {
-        throw new Error('Failed to get response reader');
+      if (!res.body) {
+        throw new Error('Failed to get response body');
       }
 
+      const reader = res.body.getReader();
       const decoder = new TextDecoder('utf-8');
 
-      let done = false;
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        done = readerDone;
-        if (value) {
-          const line = decoder.decode(value);
+      const processStream = async () => {
+        const { value, done } = await reader.read();
+        if (done) return;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
           const match = line.match(/data: (.+)/);
           if (match) {
             const data: CompletionResponse = JSON.parse(match[1]);
             setResponse((prevResponse) => prevResponse + data.content);
-            if (data.stop) {
-              break;
-            }
+            if (data.stop) return;
           }
         }
-      }
+
+        await processStream();
+      };
+
+      await processStream();
     } catch (error) {
       console.error('Error:', error);
     }
